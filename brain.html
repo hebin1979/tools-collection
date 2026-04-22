@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天天急转弯</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 500px; margin: 0 auto; }
+    
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+    
+    .tab-bar {
+      display: flex;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 8px;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .tab-item.active { color: #FF6B6B; border-bottom-color: #FF6B6B; }
+    .tab-icon { font-size: 16px; }
+    .tab-label { font-size: 12px; font-weight: bold; }
+    
+    .content { display: none; }
+    .content.active { display: block; }
+    
+    .count-bar {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .count-text { color: white; font-size: 13px; }
+    
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      margin-bottom: 15px;
+    }
+    .card-header { margin-bottom: 15px; }
+    .card-tag {
+      background: #FF6B6B;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .question-text {
+      font-size: 18px;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .answer-text {
+      font-size: 16px;
+      color: #FF6B6B;
+      line-height: 1.6;
+      padding: 15px;
+      background: #fff5f5;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .btn-answer {
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .action-buttons button {
+      flex: 1;
+      height: 45px;
+      border: none;
+      border-radius: 22px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-brain { background: #FF6B6B; color: white; }
+    .btn-boring { background: #999; color: white; }
+    .btn-back { background: #eee; color: #666; }
+    .btn-delete { background: #ff4444; color: white; }
+    
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .list-title { font-size: 16px; color: white; font-weight: bold; }
+    .list-count { font-size: 12px; color: rgba(255,255,255,0.7); }
+    
+    .question-list { display: flex; flex-direction: column; gap: 8px; }
+    .question-item {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .question-item:hover { transform: translateX(5px); }
+    .question-num { color: #FF6B6B; font-weight: bold; font-size: 14px; }
+    .question-q { flex: 1; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .question-arrow { color: #ccc; }
+    
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 60px; margin-bottom: 15px; }
+    .empty-text { font-size: 18px; color: white; font-weight: bold; margin-bottom: 10px; }
+    .empty-hint { font-size: 13px; color: rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="location.href='index.html'">←</button>
+  
+  <div class="container">
+    <div class="tab-bar">
+      <div class="tab-item active" data-tab="today" onclick="switchTab('today')">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-label">今日</span>
+      </div>
+      <div class="tab-item" data-tab="best" onclick="switchTab('best')">
+        <span class="tab-icon">🔥</span>
+        <span class="tab-label">烧脑</span>
+      </div>
+      <div class="tab-item" data-tab="boring" onclick="switchTab('boring')">
+        <span class="tab-icon">😴</span>
+        <span class="tab-label">无聊</span>
+      </div>
+    </div>
+    
+    <!-- 今日急转弯 -->
+    <div id="today" class="content active">
+      <div class="count-bar">
+        <span class="count-text">剩余 <span id="remainingCount">0</span> / <span id="totalCount">0</span> 题未分类</span>
+      </div>
+      
+      <div id="questionPage">
+        <div class="card">
+          <div class="card-header"><span class="card-tag">今日题目</span></div>
+          <div class="question-text" id="todayQuestion">加载中...</div>
+          <button class="btn-answer" onclick="showAnswer()">看答案 💡</button>
+        </div>
+      </div>
+      
+      <div id="answerPage" style="display:none;">
+        <div class="card">
+          <div class="card-header"><span class="card-tag">答案</span></div>
+          <div class="question-text" id="todayQuestion2">...</div>
+          <div class="answer-text" id="todayAnswer">...</div>
+          <div class="action-buttons">
+            <button class="btn-brain" onclick="markAsBrainBurner()">烧脑 🔥</button>
+            <button class="btn-boring" onclick="markAsBoring()">无聊 😴</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" id="allDone" style="display:none;">
+        <span class="empty-icon">🎉</span>
+        <span class="empty-text">太棒了！</span>
+        <span class="empty-hint">所有题目都已分类完成~</span>
+      </div>
+    </div>
+    
+    <!-- 烧脑列表 -->
+    <div id="best" class="content">
+      <div class="list-header">
+        <span class="list-title">🔥 烧脑收藏</span>
+        <span class="list-count">共<span id="bestCount">0</span>题</span>
+      </div>
+      <div class="question-list" id="bestList"></div>
+      <div class="empty-state" id="bestEmpty" style="display:none;">
+        <span class="empty-icon">🔥</span>
+        <span class="empty-text">还没有烧脑收藏</span>
+        <span class="empty-hint">觉得烧脑就点击收藏哦</span>
+      </div>
+    </div>
+    
+    <!-- 烧脑详情 -->
+    <div id="bestDetail" class="content">
+      <div class="card" id="bestQuestionCard">
+        <div class="card-header"><span class="card-tag" id="bestTag">🔥 烧脑 #1</span></div>
+        <div class="question-text" id="bestQuestion">...</div>
+        <button class="btn-answer" onclick="showBestAnswer()">看答案 💡</button>
+        <button class="btn-back" onclick="backToBestList()" style="margin-top:10px;width:100%;height:45px;background:#eee;border:none;border-radius:22px;cursor:pointer;">返回列表</button>
+      </div>
+      <div class="card" id="bestAnswerCard" style="display:none;">
+        <div class="card-header"><span class="card-tag">答案</span></div>
+        <div class="question-text" id="bestQuestion2">...</div>
+        <div class="answer-text" id="bestAnswer">...</div>
+        <div class="action-buttons">
+          <button class="btn-delete" onclick="deleteFromBest()">删除 🗑️</button>
+          <button class="btn-back" onclick="backToBestList()">返回列表</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 无聊列表 -->
+    <div id="boring" class="content">
+      <div class="list-header">
+        <span class="list-title">😴 无聊收藏</span>
+        <span class="list-count">共<span id="boringCount">0</span>题</span>
+      </div>
+      <div class="question-list" id="boringList"></div>
+      <div class="empty-state" id="boringEmpty" style="display:none;">
+        <span class="empty-icon">😴</span>
+        <span class="empty-text">还没有无聊收藏</span>
+        <span class="empty-hint">点击无聊的题目会保存在这里</span>
+      </div>
+    </div>
+    
+    <!-- 无聊详情 -->
+    <div id="boringDetail" class="content">
+      <div class="card" id="boringQuestionCard">
+        <div class="card-header"><span class="card-tag" id="boringTag">😴 无聊 #1</span></div>
+        <div class="question-text" id="boringQuestion">...</div>
+        <button class="btn-answer" onclick="showBoringAnswer()">看答案 💡</button>
+        <button class="btn-back" onclick="backToBoringList()" style="margin-top:10px;width:100%;height:45px;background:#eee;border:none;border-radius:22px;cursor:pointer;">返回列表</button>
+      </div>
+      <div class="card" id="boringAnswerCard" style="display:none;">
+        <div class="card-header"><span class="card-tag">答案</span></div>
+        <div class="question-text" id="boringQuestion2">...</div>
+        <div class="answer-text" id="boringAnswer">...</div>
+        <div class="action-buttons">
+          <button class="btn-delete" onclick="deleteFromBoring()">删除 🗑️</button>
+          <button class="btn-back" onclick="backToBoringList()">返回列表</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const allQuestions = [
+      { q: "A和C谁比较高？", a: "C比较高，因为ABCD（A比C低）" },
+      { q: "为什么上课打瞌睡不影响成绩？", a: "因为打瞌睡就是在学'睡'习" },
+      { q: "什么动物最向往远方？", a: "马，因为'马'上你就到了" },
+      { q: "为什么胖的人不怕冷？", a: "因为有'多'才'多'福（羽绒服）" },
+      { q: "什么瓜不能吃但是很甜？", a: "傻瓜，因为傻'瓜'甜" },
+      { q: "为什么超人穿紧身衣？", a: "因为救人要紧（穿紧身衣）" },
+      { q: "什么鱼最聪明？", a: "鲸鱼，因为'精'鱼（精英）" },
+      { q: "什么车最让人开心？", a: "保时捷，因为'报'喜'时'来" },
+      { q: "什么猫最有钱？", a: "招财猫，因为能招财进宝" },
+      { q: "什么动物最喜欢打电话？", a: "马，因为马'上'就'接'" },
+      { q: "为什么鸭子不会迷路？", a: "因为有'导'航（带路）'鸭'" },
+      { q: "什么水果最团结？", a: "榴莲，因为流连忘返（榴莲）" },
+      { q: "什么笔最会赚钱？", a: "钢笔，因为'钱'笔（铅笔）" },
+      { q: "为什么蜜蜂蜇人后就会死？", a: "因为太'蜂'狂了（疯狂）" },
+      { q: "什么酒不能喝但是很贵？", a: "五粮液，因为'物'价'已'涨" },
+      { q: "什么瓜最好吃？", a: "黄瓜，因为'皇'瓜" },
+      { q: "什么动物最受欢迎？", a: "熊猫，因为'稀'罕（稀罕）" },
+      { q: "为什么老虎不敢吃白兔？", a: "因为白兔'白'吃" },
+      { q: "什么车最贵？", a: "保时捷，因为'报'喜'时'来" },
+      { q: "什么表最准？", a: "劳力士，因为'劳'力'士'" },
+      { q: "1+1=1 2+1=1 3+4=1 4+9=1 5+7=1 6+18=1 可能吗？", a: "可能！1里+1里=1公里，2月+1月=1季度，3天+4天=1周，5月+7月=1年，6小时+18小时=1天" },
+      { q: "什么时候1+1=3？", a: "算错的时候" },
+      { q: "什么时候1+1=1？", a: "一滴水+一滴水=一滴水" },
+      { q: "什么时候10+10=1？", a: "10个+10个=1堆" },
+      { q: "什么数字比5大但比3小？", a: "没有，5>3" },
+      { q: "8的一半是几？", a: "0或3" },
+      { q: "从1写到100，数字'8'一共出现多少次？", a: "20次" },
+      { q: "100颗糖分成10袋，每袋10颗，有一个袋子少了一颗，怎么一次称出来？", a: "从第1袋拿1颗，第2袋拿2颗...一起称，少几颗就是第几袋" },
+      { q: "有一桶油，连桶重5公斤，用了一半油后连桶重3公斤，桶有多重？", a: "1公斤" },
+      { q: "小明有10块钱，买了8块钱的东西，店家为什么只找了他3块钱？", a: "因为给的是10块" },
+      { q: "如果昨天是明天，那今天就是星期五。请问'今天'实际上是星期几？", a: "星期日" },
+      { q: "9棵树种10行，每行3棵，怎么种？", a: "种成五角星形状" },
+      { q: "用3个数字'1'组成最大的数是什么？", a: "11的11次方" },
+      { q: "池塘里有100朵莲花，每次运走10朵回来运5朵，几次能运完？", a: "19次" },
+      { q: "什么字有三十张口？", a: "念" },
+      { q: "一口咬掉牛尾巴是什么字？", a: "告" },
+      { q: "两个胖子结婚打一地名？", a: "合肥" },
+      { q: "一个人在山上一个人在山下打一字？", a: "谷" },
+      { q: "七个人八只手打一成语？", a: "七手八脚" },
+      { q: "一根筷子插进眼睛里是什么字？", a: "害" },
+      { q: "一只狗四个口是什么字？", a: "器" },
+      { q: "什么鱼不能吃？", a: "咸鱼" },
+      { q: "两个人打一个字？", a: "从" },
+      { q: "三个人打一个字？", a: "众" },
+      { q: "一个人在太阳下面走是什么字？", a: "休" },
+      { q: "一半红一半绿是什么字？", a: "赫" },
+      { q: "上面小下面大是什么字？", a: "尖" },
+      { q: "一个房子着火打一个字？", a: "灾" },
+      { q: "一个人在月亮下面站是什么字？", a: "仙" },
+      { q: "三水一起来是什么字？", a: "森" },
+      { q: "石头发芽是什么字？", a: "岩" },
+      { q: "一加一不等于二是什么字？", a: "王" },
+      { q: "十字加口是什么字？", a: "田" },
+      { q: "日出打一个字？", a: "旦" },
+      { q: "月和日打一个字？", a: "明" },
+      { q: "火在水中是什么字？", a: "淡" },
+      { q: "心中有火是什么字？", a: "闷" },
+      { q: "两个女人打一个字？", a: "妆" },
+      { q: "十月十日打一个字？", a: "朝" },
+      { q: "有一个人站在山顶，前方有悬崖，他跳过去了，但地上没有痕迹，为什么？", a: "他在悬崖这边跳到悬崖这边" },
+      { q: "什么东西越用越好用？", a: "脑子" },
+      { q: "什么书页数最少但内容最多？", a: "圣经" },
+      { q: "什么水温度最高？", a: "薪水（税前）" },
+      { q: "什么山最高？", a: "书山" },
+      { q: "什么海最大？", a: "脑海" },
+      { q: "什么风最可怕？", a: "枕边风" },
+      { q: "什么门永远关不上？", a: "球门" },
+      { q: "什么东西越洗越脏？", a: "水" },
+      { q: "什么碗打不烂？", a: "铁饭碗" },
+      { q: "什么马不能跑？", a: "木马" },
+      { q: "什么笔不能写字？", a: "电笔" },
+      { q: "什么桥下面没有水？", a: "立交桥" },
+      { q: "什么饼不能吃？", a: "铁饼" },
+      { q: "什么布剪不断？", a: "瀑布" },
+      { q: "什么枪把人打跑却不伤人？", a: "水枪" },
+      { q: "什么帽不能戴？", a: "螺帽" },
+      { q: "什么瓜不能吃？", a: "傻瓜" },
+      { q: "什么药治不了病？", a: "炸药" },
+      { q: "什么糖不能吃？", a: "喜糖" },
+      { q: "什么牛不能耕地？", a: "蜗牛" },
+      { q: "什么蛋不能吃？", a: "脸蛋" },
+      { q: "什么花不能闻？", a: "烟花" },
+      { q: "什么石最值钱？", a: "钻石" },
+      { q: "什么木不能做家具？", a: "土木" },
+      { q: "什么水不能喝？", a: "薪水" },
+      { q: "什么人没有家？", a: "仙人" },
+      { q: "什么人最长命？", a: "老寿星" },
+      { q: "什么字写不完？", a: "文章" },
+      { q: "什么字最难写？", a: "一" },
+      { q: "什么字最值钱？", a: "一字千金" },
+      { q: "什么动物每天熬夜？", a: "熊猫" },
+      { q: "什么动物走路总是不稳？", a: "螃蟹" },
+      { q: "什么动物说话最少？", a: "刺猬" },
+      { q: "什么动物没有头？", a: "虾" },
+      { q: "什么动物最怕考试？", a: "企鹅" },
+      { q: "什么动物跑最快？", a: "猎豹" },
+      { q: "什么动物跳最高？", a: "跳蚤" },
+      { q: "什么动物最长寿？", a: "海龟" },
+      { q: "什么动物最贪睡？", a: "考拉" },
+      { q: "什么动物最记仇？", a: "大象" },
+      { q: "什么动物最无私？", a: "蜜蜂" },
+      { q: "什么动物最团结？", a: "狼" },
+      { q: "什么动物最善良？", a: "海豚" },
+      { q: "什么动物最勇敢？", a: "平头哥" },
+      { q: "什么动物最记路？", a: "鸽子" }
+    ];
+
+    let state = {
+      bestQuestions: [],
+      boringQuestions: [],
+      selectedIndex: null,
+      answerShown: false,
+      selectedBoringIndex: null,
+      boringAnswerShown: false,
+      currentTab: 'today',
+      todayIndex: 0
+    };
+
+    function init() {
+      loadData();
+      showTodayQuestion();
+    }
+
+    function loadData() {
+      state.bestQuestions = JSON.parse(localStorage.getItem('brainBest') || '[]');
+      state.boringQuestions = JSON.parse(localStorage.getItem('brainBoring') || '[]');
+      renderLists();
+    }
+
+    function saveData() {
+      localStorage.setItem('brainBest', JSON.stringify(state.bestQuestions));
+      localStorage.setItem('brainBoring', JSON.stringify(state.boringQuestions));
+      renderLists();
+    }
+
+    function renderLists() {
+      document.getElementById('totalCount').textContent = allQuestions.length;
+      const classified = [...state.bestQuestions, ...state.boringQuestions];
+      const uniqueClassified = classified.filter((item, index, self) => 
+        self.findIndex(t => t.q === item.q) === index
+      );
+      const remaining = allQuestions.filter(q => !uniqueClassified.some(c => c.q === q.q));
+      document.getElementById('remainingCount').textContent = remaining.length;
+      
+      document.getElementById('bestCount').textContent = state.bestQuestions.length;
+      const bestList = document.getElementById('bestList');
+      const bestEmpty = document.getElementById('bestEmpty');
+      if (state.bestQuestions.length === 0) {
+        bestList.style.display = 'none';
+        bestEmpty.style.display = 'flex';
+      } else {
+        bestList.style.display = 'flex';
+        bestEmpty.style.display = 'none';
+        bestList.innerHTML = state.bestQuestions.map((item, index) => `
+          <div class="question-item" onclick="selectBestQuestion(${index})">
+            <span class="question-num">${index + 1}.</span>
+            <span class="question-q">${item.q}</span>
+            <span class="question-arrow">></span>
+          </div>
+        `).join('');
+      }
+      
+      document.getElementById('boringCount').textContent = state.boringQuestions.length;
+      const boringList = document.getElementById('boringList');
+      const boringEmpty = document.getElementById('boringEmpty');
+      if (state.boringQuestions.length === 0) {
+        boringList.style.display = 'none';
+        boringEmpty.style.display = 'flex';
+      } else {
+        boringList.style.display = 'flex';
+        boringEmpty.style.display = 'none';
+        boringList.innerHTML = state.boringQuestions.map((item, index) => `
+          <div class="question-item" onclick="selectBoringQuestion(${index})">
+            <span class="question-num">${index + 1}.</span>
+            <span class="question-q">${item.q}</span>
+            <span class="question-arrow">></span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function getRandomUnclassified() {
+      const classified = [...state.bestQuestions, ...state.boringQuestions];
+      const remaining = allQuestions.filter(q => !classified.some(c => c.q === q.q));
+      if (remaining.length === 0) return null;
+      return remaining[Math.floor(Math.random() * remaining.length)];
+    }
+
+    function findQuestionIndex(q) {
+      return allQuestions.findIndex(item => item.q === q.q);
+    }
+
+    function showTodayQuestion() {
+      const q = getRandomUnclassified();
+      if (!q) {
+        document.getElementById('questionPage').style.display = 'none';
+        document.getElementById('answerPage').style.display = 'none';
+        document.getElementById('allDone').style.display = 'flex';
+        return;
+      }
+      state.todayIndex = findQuestionIndex(q);
+      document.getElementById('questionPage').style.display = 'block';
+      document.getElementById('answerPage').style.display = 'none';
+      document.getElementById('allDone').style.display = 'none';
+      document.getElementById('todayQuestion').textContent = q.q;
+      document.getElementById('todayQuestion2').textContent = q.q;
+      document.getElementById('todayAnswer').textContent = q.a;
+    }
+
+    function showAnswer() {
+      document.getElementById('questionPage').style.display = 'none';
+      document.getElementById('answerPage').style.display = 'block';
+    }
+
+    function markAsBrainBurner() {
+      const q = allQuestions[state.todayIndex];
+      if (!state.bestQuestions.some(item => item.q === q.q)) {
+        state.bestQuestions.push(q);
+        saveData();
+      }
+      showTodayQuestion();
+    }
+
+    function markAsBoring() {
+      const q = allQuestions[state.todayIndex];
+      if (!state.boringQuestions.some(item => item.q === q.q)) {
+        state.boringQuestions.push(q);
+        saveData();
+      }
+      showTodayQuestion();
+    }
+
+    function switchTab(tab) {
+      state.currentTab = tab;
+      document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+    }
+
+    function selectBestQuestion(index) {
+      state.selectedIndex = index;
+      state.answerShown = false;
+      switchTab('bestDetail');
+      document.getElementById('bestTag').textContent = `🔥 烧脑 #${index + 1}`;
+      document.getElementById('bestQuestion').textContent = state.bestQuestions[index].q;
+      document.getElementById('bestQuestion2').textContent = state.bestQuestions[index].q;
+      document.getElementById('bestAnswer').textContent = state.bestQuestions[index].a;
+      document.getElementById('bestQuestionCard').style.display = 'block';
+      document.getElementById('bestAnswerCard').style.display = 'none';
+    }
+
+    function showBestAnswer() {
+      document.getElementById('bestQuestionCard').style.display = 'none';
+      document.getElementById('bestAnswerCard').style.display = 'block';
+    }
+
+    function backToBestList() {
+      switchTab('best');
+    }
+
+    function deleteFromBest() {
+      state.bestQuestions.splice(state.selectedIndex, 1);
+      saveData();
+      backToBestList();
+    }
+
+    function selectBoringQuestion(index) {
+      state.selectedBoringIndex = index;
+      state.boringAnswerShown = false;
+      switchTab('boringDetail');
+      document.getElementById('boringTag').textContent = `😴 无聊 #${index + 1}`;
+      document.getElementById('boringQuestion').textContent = state.boringQuestions[index].q;
+      document.getElementById('boringQuestion2').textContent = state.boringQuestions[index].q;
+      document.getElementById('boringAnswer').textContent = state.boringQuestions[index].a;
+      document.getElementById('boringQuestionCard').style.display = 'block';
+      document.getElementById('boringAnswerCard').style.display = 'none';
+    }
+
+    function showBoringAnswer() {
+      document.getElementById('boringQuestionCard').style.display = 'none';
+      document.getElementById('boringAnswerCard').style.display = 'block';
+    }
+
+    function backToBoringList() {
+      switchTab('boring');
+    }
+
+    function deleteFromBoring() {
+      state.boringQuestions.splice(state.selectedBoringIndex, 1);
+      saveData();
+      backToBoringList();
+    }
+
+    init();
+  </script>
+</body>
+</html>
