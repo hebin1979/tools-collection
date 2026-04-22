@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小工具合集</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+        }
+
+        .tool-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .tool-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .tool-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .tool-desc {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .coming-soon {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+
+        .coming-soon .tool-icon {
+            filter: grayscale(1);
+            opacity: 0.5;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.6;
+            margin-top: 40px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ 小工具合集</h1>
+            <p>实用小工具，日常更方便</p>
+        </div>
+
+        <div class="tool-list">
+            <div class="tool-card" onclick="location.href='calculator.html'">
+                <div class="tool-icon">🧮</div>
+                <div class="tool-name">计算器</div>
+                <div class="tool-desc">科学计算器，支持基础和高级运算</div>
+            </div>
+
+            <div class="tool-card" onclick="location.href='timestamp.html'">
+                <div class="tool-icon">⏰</div>
+                <div class="tool-name">时间戳转换</div>
+                <div class="tool-desc">Unix时间戳与日期互转</div>
+            </div>
+
+            <div class="tool-card" onclick="location.href='json-formatter.html'">
+                <div class="tool-icon">📄</div>
+                <div class="tool-name">JSON格式化</div>
+                <div class="tool-desc">JSON字符串格式化与压缩</div>
+            </div>
+
+            <div class="tool-card coming-soon">
+                <div class="tool-icon">🔗</div>
+                <div class="tool-name">更多工具</div>
+                <div class="tool-desc">即将上线...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 工具合集</p>
+        </div>
+    </div>
+</body>
+</html>
