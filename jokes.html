@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天天冷笑话</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 500px; margin: 0 auto; }
+    
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+    
+    .tab-bar {
+      display: flex;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 8px;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .tab-item.active { color: #4ECDC4; border-bottom-color: #4ECDC4; }
+    .tab-icon { font-size: 16px; }
+    .tab-label { font-size: 12px; font-weight: bold; }
+    
+    .content { display: none; }
+    .content.active { display: block; }
+    
+    .count-bar {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .count-text { color: white; font-size: 13px; }
+    
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      margin-bottom: 15px;
+    }
+    .card-header { margin-bottom: 15px; }
+    .card-tag {
+      background: #4ECDC4;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .question-text {
+      font-size: 18px;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .answer-text {
+      font-size: 16px;
+      color: #4ECDC4;
+      line-height: 1.6;
+      padding: 15px;
+      background: #f0fffe;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .btn-answer {
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .action-buttons button {
+      flex: 1;
+      height: 45px;
+      border: none;
+      border-radius: 22px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-fav { background: #4ECDC4; color: white; }
+    .btn-next { background: #44A08D; color: white; }
+    .btn-back { background: #eee; color: #666; }
+    .btn-delete { background: #ff4444; color: white; }
+    
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .list-title { font-size: 16px; color: white; font-weight: bold; }
+    .list-count { font-size: 12px; color: rgba(255,255,255,0.7); }
+    
+    .question-list { display: flex; flex-direction: column; gap: 8px; }
+    .question-item {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .question-item:hover { transform: translateX(5px); }
+    .question-num { color: #4ECDC4; font-weight: bold; font-size: 14px; }
+    .question-q { flex: 1; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .question-arrow { color: #ccc; }
+    
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 60px; margin-bottom: 15px; }
+    .empty-text { font-size: 18px; color: white; font-weight: bold; margin-bottom: 10px; }
+    .empty-hint { font-size: 13px; color: rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="location.href='index.html'">←</button>
+  
+  <div class="container">
+    <div class="tab-bar">
+      <div class="tab-item active" data-tab="today" onclick="switchTab('today')">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-label">今日</span>
+      </div>
+      <div class="tab-item" data-tab="fav" onclick="switchTab('fav')">
+        <span class="tab-icon">⭐</span>
+        <span class="tab-label">收藏</span>
+      </div>
+    </div>
+    
+    <!-- 今日冷笑话 -->
+    <div id="today" class="content active">
+      <div class="count-bar">
+        <span class="count-text">剩余 <span id="remainingCount">0</span> / <span id="totalCount">0</span> 条未读</span>
+      </div>
+      
+      <div id="jokePage">
+        <div class="card">
+          <div class="card-header"><span class="card-tag">今日笑话</span></div>
+          <div class="question-text" id="todayJoke">加载中...</div>
+          <button class="btn-answer" onclick="showAnswer()">看答案 💡</button>
+        </div>
+      </div>
+      
+      <div id="answerPage" style="display:none;">
+        <div class="card">
+          <div class="card-header"><span class="card-tag">答案</span></div>
+          <div class="question-text" id="todayJoke2">...</div>
+          <div class="answer-text" id="todayAnswer">...</div>
+          <div class="action-buttons">
+            <button class="btn-fav" onclick="markAsFav()">收藏 ⭐</button>
+            <button class="btn-next" onclick="nextJoke()">下一个 💨</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" id="allDone" style="display:none;">
+        <span class="empty-icon">🎉</span>
+        <span class="empty-text">太棒了！</span>
+        <span class="empty-hint">所有笑话都已看完~</span>
+      </div>
+    </div>
+    
+    <!-- 收藏列表 -->
+    <div id="fav" class="content">
+      <div class="list-header">
+        <span class="list-title">⭐ 收藏列表</span>
+        <span class="list-count">共<span id="favCount">0</span>条</span>
+      </div>
+      <div class="question-list" id="favList"></div>
+      <div class="empty-state" id="favEmpty" style="display:none;">
+        <span class="empty-icon">⭐</span>
+        <span class="empty-text">还没有收藏</span>
+        <span class="empty-hint">有趣的笑话可以收藏哦</span>
+      </div>
+    </div>
+    
+    <!-- 收藏详情 -->
+    <div id="favDetail" class="content">
+      <div class="card" id="favQuestionCard">
+        <div class="card-header"><span class="card-tag" id="favTag">⭐ 收藏 #1</span></div>
+        <div class="question-text" id="favJoke">...</div>
+        <button class="btn-answer" onclick="showFavAnswer()">看答案 💡</button>
+        <button class="btn-back" onclick="backToFavList()" style="margin-top:10px;width:100%;height:45px;background:#eee;border:none;border-radius:22px;cursor:pointer;">返回列表</button>
+      </div>
+      <div class="card" id="favAnswerCard" style="display:none;">
+        <div class="card-header"><span class="card-tag">答案</span></div>
+        <div class="question-text" id="favJoke2">...</div>
+        <div class="answer-text" id="favAnswer">...</div>
+        <div class="action-buttons">
+          <button class="btn-delete" onclick="deleteFromFav()">删除 🗑️</button>
+          <button class="btn-back" onclick="backToFavList()">返回列表</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const allJokes = [
+      { q: "为什么海水是蓝色的？", a: "因为鱼会blue blue blue（blue是蓝色的意思）" },
+      { q: "为什么程序员总是弄丢东西？", a: "因为他们总是delete（删除）" },
+      { q: "为什么程序员不喜欢户外活动？", a: "因为外面的bug太多了" },
+      { q: "为什么程序员工资很高？", a: "因为他们天天都在写code（欠）" },
+      { q: "为什么程序员不懂浪漫？", a: "因为他们的恋爱对象都是object（对象）" },
+      { q: "为什么程序员睡觉总是睡不好？", a: "因为他们经常在梦里debug（调试）" },
+      { q: "为什么程序员最怕听电话号码？", a: "因为电话号码是数字，他们看到数字就想转换成二进制" },
+      { q: "程序员为什么不喜欢买鞋？", a: "因为他们不喜欢shoe（输）" },
+      { q: "为什么程序员的衣服都是格子衫？", a: "因为他们的世界只有0和1" },
+      { q: "为什么程序员经常加班？", a: "因为他们的deadline（最后期限）是hard（硬）的" },
+      { q: "为什么程序员不喜欢吃方便面？", a: "因为他们经常wait（等待）" },
+      { q: "为什么程序员总是说'Hello World'？", a: "因为他们只会这一个英语单词" },
+      { q: "为什么程序员害怕过马路？", a: "因为路上有太多crossing（十字路口）" },
+      { q: "为什么程序员喜欢穿黑色衣服？", a: "因为他们的人生是undefined（未定义）的" },
+      { q: "为什么程序员的数学都很好？", a: "因为他们天天和algorithm（算法）打交道" },
+      { q: "为什么程序员不喜欢玩捉迷藏？", a: "因为他们找不到hide（藏）的地方" },
+      { q: "为什么程序员的手机总是死机？", a: "因为他们的app太多了，memory（内存）不够" },
+      { q: "为什么程序员不喜欢吃炸鸡？", a: "因为他们怕stack（栈）overflow（溢出）" },
+      { q: "为什么程序员经常说'嗯'？", a: "因为他们在等用户input（输入）" },
+      { q: "为什么程序员的桌子都很乱？", a: "因为他们的文件都是file（乱）" },
+      { q: "为什么程序员不喜欢看时间？", a: "因为时间戳timestamp太长了" },
+      { q: "为什么程序员害怕出门？", a: "因为外面没有WiFi" },
+      { q: "为什么程序员不喜欢吃披萨？", a: "因为他们要keep（保持）fit（身材）" },
+      { q: "为什么程序员的键盘很干净？", a: "因为他们只用F5刷新" },
+      { q: "为什么程序员喜欢喝咖啡？", a: "因为咖啡是Java（Java和咖啡同名）" },
+      { q: "为什么程序员的头发越来越少？", a: "因为他们天天掉头发，每掉一根就少一根pointer（指针）" },
+      { q: "为什么程序员不适合当医生？", a: "因为他们只会debug，不会debug病人" },
+      { q: "为什么程序员喜欢灰色？", a: "因为灰色是#808080" },
+      { q: "为什么程序员不喜欢逛街？", a: "因为逛街要scan（扫描）太多东西" },
+      { q: "为什么程序员的女朋友总是不开心？", a: "因为程序员的world里只有bug" },
+      { q: "为什么程序员经常流鼻血？", a: "因为他们经常array（数组）overflow（下溢）" },
+      { q: "为什么程序员不喜欢赌博？", a: "因为他们知道概率，每次都是random（随机）的" },
+      { q: "为什么程序员喜欢戴眼镜？", a: "因为他们的眼睛经常screen（屏幕）time（时间）太长" },
+      { q: "为什么程序员不喜欢数学课？", a: "因为数学老师总让他们算log（对数）" },
+      { q: "为什么程序员的简历都很薄？", a: "因为他们只写skills（技能），不写experience（经验）" },
+      { q: "为什么程序员不喜欢打麻将？", a: "因为他们不会 胡（fork）" },
+      { q: "为什么程序员睡觉会打呼？", a: "因为他们在梦里也在while（循环）" },
+      { q: "为什么程序员不喜欢冬天？", a: "因为天气太cold（冷），他们的bug都冻住了" },
+      { q: "为什么程序员不喜欢吃面条？", a: "因为面条太长，like a linked list（链表）" },
+      { q: "为什么程序员喜欢晚上工作？", a: "因为晚上没有meeting（会议）" },
+      { q: "为什么程序员不喜欢开车？", a: "因为他们经常遇到bug（路障）" },
+      { q: "为什么程序员的记性很好？", a: "因为他们有cache（缓存）" },
+      { q: "为什么程序员不喜欢借钱？", a: "因为他们不想debt（欠债）" },
+      { q: "为什么程序员总说自己很忙？", a: "因为他们一直在busy（忙）" },
+      { q: "为什么程序员不喜欢吃水果？", a: "因为水果有core（核心），他们只喜欢null" },
+      { q: "为什么程序员喜欢看科幻电影？", a: "因为他们的世界充满了AI（人工智能）" },
+      { q: "为什么程序员不喜欢去旅游？", a: "因为他们没有假期holiday（节假日）" },
+      { q: "为什么程序员害怕地震？", a: "因为地震会让他们失去balance（平衡）" },
+      { q: "为什么程序员不喜欢跑步？", a: "因为他们的代码总是在run（运行）" },
+      { q: "为什么程序员喜欢戴耳机？", a: "因为他们需要listen（听）error（错误）" }
+    ];
+
+    let state = {
+      favJokes: [],
+      selectedIndex: null,
+      answerShown: false,
+      currentTab: 'today',
+      todayIndex: 0
+    };
+
+    function init() {
+      loadData();
+      showTodayJoke();
+    }
+
+    function loadData() {
+      state.favJokes = JSON.parse(localStorage.getItem('jokeFavs') || '[]');
+      renderLists();
+    }
+
+    function saveData() {
+      localStorage.setItem('jokeFavs', JSON.stringify(state.favJokes));
+      renderLists();
+    }
+
+    function renderLists() {
+      document.getElementById('totalCount').textContent = allJokes.length;
+      const read = state.favJokes.map(j => j.q);
+      const remaining = allJokes.filter(j => !read.includes(j.q));
+      document.getElementById('remainingCount').textContent = remaining.length;
+      
+      document.getElementById('favCount').textContent = state.favJokes.length;
+      const favList = document.getElementById('favList');
+      const favEmpty = document.getElementById('favEmpty');
+      if (state.favJokes.length === 0) {
+        favList.style.display = 'none';
+        favEmpty.style.display = 'flex';
+      } else {
+        favList.style.display = 'flex';
+        favEmpty.style.display = 'none';
+        favList.innerHTML = state.favJokes.map((item, index) => `
+          <div class="question-item" onclick="selectFavJoke(${index})">
+            <span class="question-num">${index + 1}.</span>
+            <span class="question-q">${item.q}</span>
+            <span class="question-arrow">></span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function getRandomUnread() {
+      const read = state.favJokes.map(j => j.q);
+      const remaining = allJokes.filter(j => !read.includes(j.q));
+      if (remaining.length === 0) return null;
+      return remaining[Math.floor(Math.random() * remaining.length)];
+    }
+
+    function findJokeIndex(q) {
+      return allJokes.findIndex(item => item.q === q.q);
+    }
+
+    function showTodayJoke() {
+      const joke = getRandomUnread();
+      if (!joke) {
+        document.getElementById('jokePage').style.display = 'none';
+        document.getElementById('answerPage').style.display = 'none';
+        document.getElementById('allDone').style.display = 'flex';
+        return;
+      }
+      state.todayIndex = findJokeIndex(joke);
+      document.getElementById('jokePage').style.display = 'block';
+      document.getElementById('answerPage').style.display = 'none';
+      document.getElementById('allDone').style.display = 'none';
+      document.getElementById('todayJoke').textContent = joke.q;
+      document.getElementById('todayJoke2').textContent = joke.q;
+      document.getElementById('todayAnswer').textContent = joke.a;
+    }
+
+    function showAnswer() {
+      document.getElementById('jokePage').style.display = 'none';
+      document.getElementById('answerPage').style.display = 'block';
+    }
+
+    function markAsFav() {
+      const joke = allJokes[state.todayIndex];
+      if (!state.favJokes.some(item => item.q === joke.q)) {
+        state.favJokes.push(joke);
+        saveData();
+      }
+      nextJoke();
+    }
+
+    function nextJoke() {
+      showTodayJoke();
+    }
+
+    function switchTab(tab) {
+      state.currentTab = tab;
+      document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+    }
+
+    function selectFavJoke(index) {
+      state.selectedIndex = index;
+      state.answerShown = false;
+      switchTab('favDetail');
+      document.getElementById('favTag').textContent = `⭐ 收藏 #${index + 1}`;
+      document.getElementById('favJoke').textContent = state.favJokes[index].q;
+      document.getElementById('favJoke2').textContent = state.favJokes[index].q;
+      document.getElementById('favAnswer').textContent = state.favJokes[index].a;
+      document.getElementById('favQuestionCard').style.display = 'block';
+      document.getElementById('favAnswerCard').style.display = 'none';
+    }
+
+    function showFavAnswer() {
+      document.getElementById('favQuestionCard').style.display = 'none';
+      document.getElementById('favAnswerCard').style.display = 'block';
+    }
+
+    function backToFavList() {
+      switchTab('fav');
+    }
+
+    function deleteFromFav() {
+      state.favJokes.splice(state.selectedIndex, 1);
+      saveData();
+      backToFavList();
+    }
+
+    init();
+  </script>
+</body>
+</html>
