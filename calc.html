@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天天计算</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .tab-bar {
+      display: flex;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 15px;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .tab-item.active {
+      color: #4CAF50;
+      border-bottom-color: #4CAF50;
+    }
+    .tab-icon { font-size: 20px; }
+    .tab-label { font-size: 14px; font-weight: bold; }
+    
+    .content { display: none; }
+    .content.active { display: block; }
+    
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    
+    .question-card {
+      background: white;
+      border-radius: 18px;
+      padding: 35px;
+      margin-bottom: 15px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    .question-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .num { font-size: 42px; font-weight: bold; color: #333; }
+    .operator { font-size: 32px; color: #4CAF50; }
+    .question-mark { font-size: 42px; font-weight: bold; color: #FF6B35; }
+    
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .option-btn {
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .option-btn:hover { border-color: #4CAF50; }
+    .option-btn.selected {
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+    
+    .action-area { text-align: center; }
+    .btn-group { display: flex; gap: 12px; justify-content: center; }
+    .btn-submit {
+      flex: 1;
+      height: 50px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-skip {
+      width: 100px;
+      height: 50px;
+      background: #999;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .result-text {
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    .result-text.correct { background: #d4edda; color: #155724; }
+    .result-text.error { background: #f8d7da; color: #721c24; }
+    
+    .result-card {
+      background: white;
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    .result-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .result-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .result-stat { display: flex; flex-direction: column; align-items: center; }
+    .result-value { font-size: 28px; font-weight: bold; color: #4CAF50; }
+    .result-label { font-size: 12px; color: #999; margin-top: 5px; }
+    
+    .wrong-section { margin-bottom: 20px; }
+    .wrong-title { font-size: 14px; font-weight: bold; color: #666; margin-bottom: 10px; }
+    .wrong-item {
+      background: #f8f8f8;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    .wrong-q { font-size: 14px; color: #333; display: block; margin-bottom: 5px; }
+    .wrong-a { font-size: 12px; color: #ff6b6b; display: block; }
+    .correct-a { font-size: 12px; color: #4CAF50; display: block; }
+    
+    .btn-restart {
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .history-title { font-size: 16px; color: white; font-weight: bold; }
+    .history-count { font-size: 12px; color: rgba(255,255,255,0.7); }
+    
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+    .history-item {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .history-date { font-size: 12px; color: #999; display: block; margin-bottom: 5px; }
+    .history-stats { display: flex; gap: 12px; }
+    .history-score, .history-rate, .history-streak { font-size: 12px; color: #666; }
+    .btn-delete {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 15px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 60px; margin-bottom: 15px; }
+    .empty-text { font-size: 18px; color: white; font-weight: bold; margin-bottom: 10px; }
+    .empty-hint { font-size: 13px; color: rgba(255,255,255,0.8); }
+    
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="location.href='index.html'">←</button>
+  
+  <div class="container">
+    <div class="tab-bar">
+      <div class="tab-item active" data-tab="practice" onclick="switchTab('practice')">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-label">练习</span>
+      </div>
+      <div class="tab-item" data-tab="history" onclick="switchTab('history')">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">历史</span>
+      </div>
+    </div>
+    
+    <!-- 练习模式 -->
+    <div id="practice" class="content active">
+      <div id="gameArea">
+        <div class="stats-bar">
+          <div class="stat">
+            <span class="stat-value" id="score">0</span>
+            <span class="stat-label">得分</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="progress">0/10</span>
+            <span class="stat-label">进度</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="streak">0</span>
+            <span class="stat-label">连击</span>
+          </div>
+        </div>
+        
+        <div class="question-card">
+          <div class="question-text">
+            <span class="num" id="num1">0</span>
+            <span class="operator" id="operator">+</span>
+            <span class="num" id="num2">0</span>
+            <span class="operator">=</span>
+            <span class="question-mark">?</span>
+          </div>
+        </div>
+        
+        <div class="options-grid" id="optionsGrid"></div>
+        
+        <div class="action-area">
+          <div id="resultText"></div>
+          <div class="btn-group" id="btnGroup">
+            <button class="btn-submit" onclick="checkAnswer()">提交答案</button>
+            <button class="btn-skip" onclick="skipQuestion()">跳过</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="resultArea" style="display:none;">
+        <div class="result-card">
+          <div class="result-title">练习完成！</div>
+          <div class="result-stats">
+            <div class="result-stat">
+              <span class="result-value" id="finalScore">0</span>
+              <span class="result-label">最终得分</span>
+            </div>
+            <div class="result-stat">
+              <span class="result-value" id="correctRate">0%</span>
+              <span class="result-label">正确率</span>
+            </div>
+            <div class="result-stat">
+              <span class="result-value" id="maxStreak">0</span>
+              <span class="result-label">最高连击</span>
+            </div>
+          </div>
+          <div class="wrong-section" id="wrongSection" style="display:none;">
+            <div class="wrong-title">错题回顾 (<span id="wrongCount">0</span>题)</div>
+            <div id="wrongList"></div>
+          </div>
+          <button class="btn-restart" onclick="restartGame()">再来一轮</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 历史记录 -->
+    <div id="history" class="content">
+      <div class="history-header">
+        <span class="history-title">历史记录</span>
+        <span class="history-count">共<span id="historyCount">0</span>条</span>
+      </div>
+      <div class="history-list" id="historyList"></div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <span class="empty-icon">📊</span>
+        <span class="empty-text">暂无历史记录</span>
+        <span class="empty-hint">快去练习吧~</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let state = {
+      score: 0,
+      totalQuestions: 10,
+      currentQuestion: 0,
+      streak: 0,
+      maxStreak: 0,
+      wrongCount: 0,
+      wrongQuestions: [],
+      num1: 0,
+      num2: 0,
+      operator: '+',
+      currentAnswer: 0,
+      options: [],
+      selectedOption: -1,
+      gameState: 'playing',
+      historyRecords: []
+    };
+
+    function init() {
+      loadHistory();
+      startGame();
+    }
+
+    function loadHistory() {
+      const history = JSON.parse(localStorage.getItem('mathPracticeHistory') || '[]');
+      state.historyRecords = history;
+      renderHistory();
+    }
+
+    function saveRecord(record) {
+      state.historyRecords.unshift(record);
+      if (state.historyRecords.length > 30) state.historyRecords.pop();
+      localStorage.setItem('mathPracticeHistory', JSON.stringify(state.historyRecords));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      document.getElementById('historyCount').textContent = state.historyRecords.length;
+      const list = document.getElementById('historyList');
+      const empty = document.getElementById('emptyState');
+      
+      if (state.historyRecords.length === 0) {
+        list.style.display = 'none';
+        empty.style.display = 'flex';
+      } else {
+        list.style.display = 'flex';
+        empty.style.display = 'none';
+        list.innerHTML = state.historyRecords.map((item, index) => `
+          <div class="history-item">
+            <div class="history-info">
+              <span class="history-date">${item.date}</span>
+              <div class="history-stats">
+                <span class="history-score">得分：${item.score}</span>
+                <span class="history-rate">正确率：${item.correctRate}%</span>
+                <span class="history-streak">最高连击：${item.maxStreak}</span>
+              </div>
+            </div>
+            <button class="btn-delete" onclick="deleteRecord(${index})">删除</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function deleteRecord(index) {
+      state.historyRecords.splice(index, 1);
+      localStorage.setItem('mathPracticeHistory', JSON.stringify(state.historyRecords));
+      renderHistory();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      
+      if (tab === 'practice') {
+        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+      }
+    }
+
+    function startGame() {
+      state = {
+        ...state,
+        score: 0,
+        currentQuestion: 0,
+        streak: 0,
+        maxStreak: 0,
+        wrongCount: 0,
+        wrongQuestions: [],
+        gameState: 'playing'
+      };
+      document.getElementById('gameArea').style.display = 'block';
+      document.getElementById('resultArea').style.display = 'none';
+      generateQuestion();
+      updateUI();
+    }
+
+    function generateQuestion() {
+      if (state.currentQuestion >= state.totalQuestions) {
+        endGame();
+        return;
+      }
+      const types = ['addition', 'subtraction', 'multiplication', 'division'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      switch(type) {
+        case 'addition':
+          const n1 = Math.floor(Math.random() * 99) + 1;
+          const n2 = Math.floor(Math.random() * (99 - n1)) + 1;
+          state.num1 = n1; state.num2 = n2;
+          state.operator = '+';
+          state.currentAnswer = n1 + n2;
+          break;
+        case 'subtraction':
+          const s1 = Math.floor(Math.random() * 99) + 1;
+          const s2 = Math.floor(Math.random() * s1) + 1;
+          state.num1 = s1; state.num2 = s2;
+          state.operator = '−';
+          state.currentAnswer = s1 - s2;
+          break;
+        case 'multiplication':
+          const m1 = Math.floor(Math.random() * 9) + 1;
+          const m2 = Math.floor(Math.random() * 9) + 1;
+          state.num1 = m1; state.num2 = m2;
+          state.operator = '×';
+          state.currentAnswer = m1 * m2;
+          break;
+        case 'division':
+          const divisor = Math.floor(Math.random() * 8) + 2;
+          const quotient = Math.floor(Math.random() * 9) + 1;
+          const remainder = Math.floor(Math.random() * divisor);
+          const dividend = divisor * quotient + remainder;
+          state.num1 = dividend; state.num2 = divisor;
+          state.operator = '÷';
+          state.currentAnswer = remainder === 0 ? quotient : `${quotient}...${remainder}`;
+          break;
+      }
+      state.options = generateOptions(state.currentAnswer.toString());
+      state.selectedOption = -1;
+      updateUI();
+    }
+
+    function generateOptions(correct) {
+      const options = [correct];
+      while (options.length < 4) {
+        let wrong;
+        if (correct.includes('...')) {
+          const parts = correct.split('...');
+          const q = parseInt(parts[0]);
+          const r = parseInt(parts[1]);
+          const wrongOptions = [
+            `${q}...${(r + 1) % 10}`,
+            `${q}...${r > 0 ? r - 1 : r + 1}`,
+            `${q + 1}...${r}`,
+            `${q > 0 ? q - 1 : q + 1}...${r}`
+          ];
+          wrong = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
+        } else {
+          const num = parseInt(correct);
+          const offset = Math.floor(Math.random() * 5) + 1;
+          wrong = (num + offset * (Math.random() > 0.5 ? 1 : -1)).toString();
+        }
+        if (!options.includes(wrong) && parseInt(wrong) >= 0) {
+          options.push(wrong);
+        }
+      }
+      return options.sort(() => Math.random() - 0.5);
+    }
+
+    function selectOption(index) {
+      state.selectedOption = index;
+      document.querySelectorAll('.option-btn').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === index);
+      });
+    }
+
+    function checkAnswer() {
+      if (state.selectedOption === -1) {
+        alert('请选择答案！');
+        return;
+      }
+      const selected = state.options[state.selectedOption].toString();
+      const correct = state.currentAnswer.toString();
+      const resultText = document.getElementById('resultText');
+      
+      if (selected === correct) {
+        state.score += 10;
+        state.streak += 1;
+        state.maxStreak = Math.max(state.maxStreak, state.streak);
+        resultText.className = 'result-text correct';
+        resultText.textContent = '✅ 正确！+10分';
+      } else {
+        state.streak = 0;
+        state.wrongCount += 1;
+        state.wrongQuestions.push({
+          question: `${state.num1} ${state.operator} ${state.num2}`,
+          yourAnswer: selected,
+          correctAnswer: state.currentAnswer
+        });
+        resultText.className = 'result-text error';
+        resultText.textContent = `❌ 正确答案是 ${state.currentAnswer}`;
+      }
+      
+      document.getElementById('btnGroup').style.display = 'none';
+      
+      setTimeout(() => {
+        state.currentQuestion++;
+        resultText.textContent = '';
+        document.getElementById('btnGroup').style.display = 'flex';
+        generateQuestion();
+      }, 1500);
+    }
+
+    function skipQuestion() {
+      state.currentQuestion++;
+      state.streak = 0;
+      state.wrongCount += 1;
+      state.wrongQuestions.push({
+        question: `${state.num1} ${state.num2}`,
+        yourAnswer: '跳过',
+        correctAnswer: state.currentAnswer
+      });
+      generateQuestion();
+    }
+
+    function endGame() {
+      const correctRate = Math.round((state.totalQuestions - state.wrongCount) / state.totalQuestions * 100);
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      saveRecord({
+        date: dateStr,
+        score: state.score,
+        correctRate: correctRate,
+        maxStreak: state.maxStreak,
+        wrongCount: state.wrongCount,
+        totalQuestions: state.totalQuestions
+      });
+      
+      document.getElementById('gameArea').style.display = 'none';
+      document.getElementById('resultArea').style.display = 'block';
+      document.getElementById('finalScore').textContent = state.score;
+      document.getElementById('correctRate').textContent = correctRate + '%';
+      document.getElementById('maxStreak').textContent = state.maxStreak;
+      
+      const wrongSection = document.getElementById('wrongSection');
+      if (state.wrongCount > 0) {
+        wrongSection.style.display = 'block';
+        document.getElementById('wrongCount').textContent = state.wrongCount;
+        document.getElementById('wrongList').innerHTML = state.wrongQuestions.map(w => `
+          <div class="wrong-item">
+            <span class="wrong-q">${w.question}</span>
+            <span class="wrong-a">你的答案：${w.yourAnswer}</span>
+            <span class="correct-a">正确答案：${w.correctAnswer}</span>
+          </div>
+        `).join('');
+      } else {
+        wrongSection.style.display = 'none';
+      }
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    function updateUI() {
+      document.getElementById('score').textContent = state.score;
+      document.getElementById('progress').textContent = `${state.currentQuestion}/${state.totalQuestions}`;
+      document.getElementById('streak').textContent = state.streak;
+      document.getElementById('num1').textContent = state.num1;
+      document.getElementById('num2').textContent = state.num2;
+      document.getElementById('operator').textContent = state.operator;
+      
+      const grid = document.getElementById('optionsGrid');
+      grid.innerHTML = state.options.map((opt, i) => `
+        <button class="option-btn ${state.selectedOption === i ? 'selected' : ''}" onclick="selectOption(${i})">${opt}</button>
+      `).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>
