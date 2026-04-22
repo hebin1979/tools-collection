@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间戳转换</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            outline: 2px solid #e94560;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn-convert {
+            background: #e94560;
+            color: white;
+        }
+
+        .btn-now {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .result-label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            color: #ffd700;
+            font-size: 16px;
+        }
+
+        .copy-btn {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
+            <h1>⏰ 时间戳转换</h1>
+            <div></div>
+        </div>
+
+        <div class="card">
+            <h3>时间戳 → 日期</h3>
+            <div class="input-group">
+                <label>时间戳（秒）</label>
+                <input type="text" id="timestampInput" placeholder="例如: 1776864000">
+            </div>
+            <button class="btn btn-convert" onclick="timestampToDate()">转换</button>
+            <button class="btn btn-now" onclick="nowToTimestamp()">当前时间</button>
+            <div class="result" id="timestampResult" style="display:none;">
+                <div class="result-label">转换结果：</div>
+                <div class="result-value" id="timestampValue"></div>
+                <button class="copy-btn" onclick="copyText('timestampValue')">复制</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>日期 → 时间戳</h3>
+            <div class="input-group">
+                <label>日期时间</label>
+                <input type="datetime-local" id="dateInput">
+            </div>
+            <button class="btn btn-convert" onclick="dateToTimestamp()">转换</button>
+            <div class="result" id="dateResult" style="display:none;">
+                <div class="result-label">转换结果：</div>
+                <div class="result-value" id="dateValue"></div>
+                <button class="copy-btn" onclick="copyText('dateValue')">复制</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化当前时间
+        function initNow() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateInput').value = now.toISOString().slice(0, 16);
+        }
+
+        function timestampToDate() {
+            const input = document.getElementById('timestampInput').value.trim();
+            if (!input) return;
+
+            // 自动检测是秒还是毫秒
+            let timestamp = parseInt(input);
+            if (timestamp < 10000000000) {
+                timestamp *= 1000; // 秒转毫秒
+            }
+
+            const date = new Date(timestamp);
+            const result = formatDate(date);
+            
+            document.getElementById('timestampValue').textContent = result;
+            document.getElementById('timestampResult').style.display = 'block';
+        }
+
+        function nowToTimestamp() {
+            const now = new Date();
+            const timestamp = Math.floor(now.getTime() / 1000);
+            
+            document.getElementById('timestampInput').value = timestamp;
+            timestampToDate();
+        }
+
+        function dateToTimestamp() {
+            const input = document.getElementById('dateInput').value;
+            if (!input) return;
+
+            const date = new Date(input);
+            const timestamp = Math.floor(date.getTime() / 1000);
+            
+            document.getElementById('dateValue').textContent = timestamp + ' (秒)';
+            document.getElementById('dateResult').style.display = 'block';
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            });
+        }
+
+        initNow();
+    </script>
+</body>
+</html>
