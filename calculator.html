@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: right;
+            margin-bottom: 15px;
+        }
+
+        .expression {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            min-height: 20px;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .result {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-operator {
+            background: rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-equals {
+            background: rgba(40, 167, 69, 0.5);
+        }
+
+        .btn-clear {
+            background: rgba(255, 193, 7, 0.3);
+            color: #fff;
+        }
+
+        .btn-back {
+            background: rgba(108, 117, 125, 0.5);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="location.href='index.html'">← 返回</button>
+    
+    <div class="calculator">
+        <div class="display">
+            <div class="expression" id="expression"></div>
+            <div class="result" id="result">0</div>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-clear" onclick="clearAll()">C</button>
+            <button class="btn btn-back" onclick="backspace()">⌫</button>
+            <button class="btn btn-operator" onclick="appendOp('%')">%</button>
+            <button class="btn btn-operator" onclick="appendOp('/')">÷</button>
+            
+            <button class="btn" onclick="appendNumber('7')">7</button>
+            <button class="btn" onclick="appendNumber('8')">8</button>
+            <button class="btn" onclick="appendNumber('9')">9</button>
+            <button class="btn btn-operator" onclick="appendOp('*')">×</button>
+            
+            <button class="btn" onclick="appendNumber('4')">4</button>
+            <button class="btn" onclick="appendNumber('5')">5</button>
+            <button class="btn" onclick="appendNumber('6')">6</button>
+            <button class="btn btn-operator" onclick="appendOp('-')">-</button>
+            
+            <button class="btn" onclick="appendNumber('1')">1</button>
+            <button class="btn" onclick="appendNumber('2')">2</button>
+            <button class="btn" onclick="appendNumber('3')">3</button>
+            <button class="btn btn-operator" onclick="appendOp('+')">+</button>
+            
+            <button class="btn" onclick="appendNumber('0')">0</button>
+            <button class="btn" onclick="appendNumber('.')">.</button>
+            <button class="btn" onclick="toggleSign()">±</button>
+            <button class="btn btn-equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let expression = '';
+        let result = '0';
+
+        function updateDisplay() {
+            document.getElementById('expression').textContent = expression;
+            document.getElementById('result').textContent = result;
+        }
+
+        function appendNumber(num) {
+            if (result === '0' && num !== '.') {
+                result = num;
+            } else {
+                result += num;
+            }
+            expression += num;
+            updateDisplay();
+        }
+
+        function appendOp(op) {
+            expression += ' ' + op + ' ';
+            result = '0';
+            updateDisplay();
+        }
+
+        function clearAll() {
+            expression = '';
+            result = '0';
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (result.length > 1) {
+                result = result.slice(0, -1);
+            } else {
+                result = '0';
+            }
+            expression = expression.slice(0, -1);
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (result !== '0') {
+                result = result.startsWith('-') ? result.slice(1) : '-' + result;
+                updateDisplay();
+            }
+        }
+
+        function calculate() {
+            try {
+                // 替换显示符号为计算符号
+                let calcExpr = expression
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/');
+                
+                // 如果最后是运算符，移除它
+                calcExpr = calcExpr.trim();
+                if (['+', '-', '*', '/', '%'].includes(calcExpr.slice(-1))) {
+                    calcExpr = calcExpr.slice(0, -1);
+                }
+                
+                const calcResult = eval(calcExpr);
+                result = String(calcResult);
+                expression = result;
+                updateDisplay();
+            } catch (e) {
+                result = 'Error';
+                updateDisplay();
+            }
+        }
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+            if (e.key === '.') appendNumber('.');
+            if (e.key === '+') appendOp('+');
+            if (e.key === '-') appendOp('-');
+            if (e.key === '*') appendOp('*');
+            if (e.key === '/') appendOp('/');
+            if (e.key === 'Enter') calculate();
+            if (e.key === 'Escape') clearAll();
+            if (e.key === 'Backspace') backspace();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
